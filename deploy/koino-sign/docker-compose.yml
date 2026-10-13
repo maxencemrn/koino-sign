@@ -1,0 +1,98 @@
+# KOINO SIGN : la plateforme de signature électronique de Koïno (fork de Documenso).
+# Quatre services sur un seul serveur :
+#   · caddy      : HTTPS automatique (Let's Encrypt) devant tout le reste ;
+#   · sign       : l'application (image construite par GitHub Actions depuis ce dépôt) ;
+#   · base       : PostgreSQL (documents, signatures, journal d'audit) ;
+#   · conversion : Gotenberg, Word/HTML → PDF (protégé par mot de passe), utilisé par
+#                  KOINO SIGN et par l'outil Koïno (https://<domaine>/convertisseur/…).
+# Les secrets vivent dans .env (créé par installer.sh, jamais dans le dépôt).
+name: koino-sign
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAINE: ${DOMAINE:?DOMAINE manquant dans .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - sign
+
+  sign:
+    image: ${IMAGE_KOINO_SIGN:-ghcr.io/maxencemrn/koino-sign:latest}
+    restart: unless-stopped
+    depends_on:
+      base:
+        condition: service_healthy
+      conversion:
+        condition: service_started
+    environment:
+      PORT: "3000"
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?}
+      NEXT_PRIVATE_ENCRYPTION_KEY: ${NEXT_PRIVATE_ENCRYPTION_KEY:?}
+      NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY: ${NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY:?}
+      NEXT_PUBLIC_WEBAPP_URL: https://${DOMAINE}
+      NEXT_PRIVATE_INTERNAL_WEBAPP_URL: http://localhost:3000
+      NEXT_PRIVATE_DATABASE_URL: postgres://koino_sign:${POSTGRES_PASSWORD:?}@base:5432/koino_sign
+      NEXT_PRIVATE_DIRECT_DATABASE_URL: postgres://koino_sign:${POSTGRES_PASSWORD:?}@base:5432/koino_sign
+      # emails envoyés par KOINO SIGN (invitations à signer, relances, document signé)
+      NEXT_PRIVATE_SMTP_TRANSPORT: resend
+      NEXT_PRIVATE_RESEND_API_KEY: ${RESEND_API_KEY:?}
+      NEXT_PRIVATE_SMTP_FROM_ADDRESS: ${EMAIL_EXPEDITEUR:-sign@koino.fr}
+      NEXT_PRIVATE_SMTP_FROM_NAME: KOINO SIGN
+      # documents rangés dans la base (sauvegardée chaque nuit avec elle)
+      NEXT_PUBLIC_UPLOAD_TRANSPORT: database
+      NEXT_PUBLIC_DOCUMENT_SIZE_UPLOAD_LIMIT: "20"
+      # le cachet de signature (certificat .p12 généré par installer.sh)
+      NEXT_PRIVATE_SIGNING_TRANSPORT: local
+      NEXT_PRIVATE_SIGNING_PASSPHRASE: ${SIGNATURE_PHRASE:?}
+      NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS: ${SIGNATURE_CERTIFICAT_BASE64:?}
+      NEXT_PRIVATE_SIGNING_REASON: Signé électroniquement via KOINO SIGN
+      # tâches de fond (scellement des PDF, relances, expirations) dans le conteneur
+      NEXT_PRIVATE_JOBS_PROVIDER: local
+      # Word → PDF
+      NEXT_PRIVATE_DOCUMENT_CONVERSION_URL: http://conversion:3000
+      NEXT_PRIVATE_DOCUMENT_CONVERSION_USERNAME: ${CONVERSION_UTILISATEUR:?}
+      NEXT_PRIVATE_DOCUMENT_CONVERSION_PASSWORD: ${CONVERSION_MOT_DE_PASSE:?}
+      # seules des adresses @koino.fr peuvent créer un compte
+      NEXT_PRIVATE_ALLOWED_SIGNUP_DOMAINS: ${DOMAINES_AUTORISES:-koino.fr}
+      NEXT_PUBLIC_SUPPORT_EMAIL: ${EMAIL_SUPPORT:-contact@koino.fr}
+      DOCUMENSO_DISABLE_TELEMETRY: "true"
+
+  base:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: koino_sign
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: koino_sign
+    volumes:
+      - base:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U koino_sign -d koino_sign"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  conversion:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - --api-enable-basic-auth
+      - --api-timeout=90s
+    environment:
+      GOTENBERG_API_BASIC_AUTH_USERNAME: ${CONVERSION_UTILISATEUR:?}
+      GOTENBERG_API_BASIC_AUTH_PASSWORD: ${CONVERSION_MOT_DE_PASSE:?}
+
+volumes:
+  base:
+  caddy_data:
+  caddy_config:

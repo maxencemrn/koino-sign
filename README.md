@@ -1,3 +1,5 @@
+> **KOINO SIGN** — ce dépôt est le fork de Documenso utilisé par [Koïno](https://koino.fr) pour sa plateforme de signature électronique (branche `koino`). Modifications : identité KOINO SIGN (logo, couleurs, textes), mention du code source (AGPL-3.0, art. 13), kit d'installation serveur (`deploy/koino-sign/`) et construction de l'image (`.github/workflows/koino-sign-image.yml`). Le code original de Documenso est sous AGPL-3.0 ; voir `LICENSE`.
+
 <img src="https://github.com/documenso/documenso/assets/13398220/a643571f-0239-46a6-a73e-6bef38d1228b" alt="Documenso Logo">
 
 <p align="center" style="margin-top: 20px">

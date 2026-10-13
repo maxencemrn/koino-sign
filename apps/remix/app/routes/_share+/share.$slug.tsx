@@ -12,15 +12,15 @@ export function meta({ params: { slug } }: Route.MetaArgs) {
   }
 
   return [
-    { title: 'Documenso - Share' },
-    { description: 'I just signed a document in style with Documenso!' },
+    { title: 'KOINO SIGN - Partage' },
+    { description: 'Document signé avec KOINO SIGN.' },
     {
       property: 'og:title',
-      content: 'Documenso - Join the open source signing revolution',
+      content: 'KOINO SIGN, la signature électronique de Koïno',
     },
     {
       property: 'og:description',
-      content: 'I just signed with Documenso!',
+      content: 'Document signé avec KOINO SIGN.',
     },
     {
       property: 'og:type',
@@ -32,7 +32,7 @@ export function meta({ params: { slug } }: Route.MetaArgs) {
     },
     {
       name: 'twitter:site',
-      content: '@documenso',
+      content: '@koino',
     },
     {
       name: 'twitter:card',
@@ -44,7 +44,7 @@ export function meta({ params: { slug } }: Route.MetaArgs) {
     },
     {
       name: 'twitter:description',
-      content: 'I just signed with Documenso!',
+      content: 'Document signé avec KOINO SIGN.',
     },
   ];
 }
@@ -69,8 +69,8 @@ export const loader = async ({ request, params: { slug } }: Route.LoaderArgs) =>
     return {};
   }
 
-  // Is hardcoded because this whole meta is hardcoded anyway for Documenso.
-  throw redirect('https://documenso.com');
+  // KOINO SIGN : un lien de partage sans document renvoie vers Koïno.
+  throw redirect('https://koino.fr');
 };
 
 export default function SharePage() {

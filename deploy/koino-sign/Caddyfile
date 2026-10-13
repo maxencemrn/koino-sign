@@ -1,0 +1,14 @@
+# HTTPS automatique pour le domaine de KOINO SIGN (variable DOMAINE de .env).
+{$DOMAINE} {
+	encode zstd gzip
+
+	# le convertisseur (Gotenberg) pour l'outil Koïno : Word/HTML → PDF ;
+	# Gotenberg exige lui-même l'identifiant et le mot de passe (.env)
+	handle_path /convertisseur/* {
+		reverse_proxy conversion:3000
+	}
+
+	handle {
+		reverse_proxy sign:3000
+	}
+}

@@ -23,6 +23,7 @@ import {
   useMatches,
 } from 'react-router';
 import { PreventFlashOnWrongTheme, ThemeProvider, useTheme } from 'remix-themes';
+import { SourceCodeNotice } from '~/components/general/source-code-notice';
 import { nonceMiddleware } from '~/middleware/nonce';
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
@@ -125,6 +126,10 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
   // route tree, attached directly to document.body).
   const matches = useMatches();
   const isRecipientRoute = matches.some((m) => m.id?.startsWith('routes/_recipient+'));
+  // KOINO SIGN : la mention du code source (AGPL), sauf dans les PDF générés et les intégrations
+  const showSourceCodeNotice = !matches.some(
+    (m) => m.id?.startsWith('routes/_internal+') || m.id?.startsWith('routes/embed+'),
+  );
 
   return (
     // `suppressHydrationWarning` because `remix-themes` intentionally mutates
@@ -175,6 +180,8 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
             <TooltipProvider>
               <TrpcProvider>
                 {children}
+
+                {showSourceCodeNotice && <SourceCodeNotice />}
 
                 <Toaster />
               </TrpcProvider>

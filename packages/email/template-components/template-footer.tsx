@@ -33,7 +33,7 @@ export const TemplateFooter = ({ isDocument = true, reportUrl }: TemplateFooterP
         <Text className="my-4 text-base text-muted-foreground">
           <Trans>
             This document was sent using{' '}
-            <Link className="text-primary" href="https://documen.so/mail-footer">
+            <Link className="text-primary" href="https://koino.fr">
               Documenso
             </Link>
             .
@@ -64,9 +64,9 @@ export const TemplateFooter = ({ isDocument = true, reportUrl }: TemplateFooterP
 
       {!branding.brandingEnabled && (
         <Text className="my-8 text-muted-foreground text-sm">
-          Documenso, Inc.
+          Koïno SAS
           <br />
-          2261 Market Street, #5211, San Francisco, CA 94114, USA
+          38 Rue Notre-Dame-de-Lorette, 75009 Paris, France
         </Text>
       )}
     </Section>
