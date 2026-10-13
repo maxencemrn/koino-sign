@@ -41,7 +41,8 @@ chaque nuit à 3 h 30 (`/opt/koino-sign/sauvegardes`, 14 jours).
    (seul ce domaine peut créer un compte).
 2. Le rendre administrateur : `sudo /opt/koino-sign/rendre-admin.sh prenom@koino.fr`
 3. Dans KOINO SIGN, créer l'équipe **Koïno**, puis dans ses réglages :
-   - **Jetons d'API** : créer un jeton pour l'outil Koïno ;
+   - **Jetons d'API** : créer un jeton pour l'outil Koïno, expiration
+     **« Jamais »** (sinon l'outil perd l'accès à l'échéance, 3 mois par défaut) ;
    - **Webhooks** : `https://admin.koino.fr/api/signature/webhook`, événements
      document envoyé, ouvert, signé, terminé, refusé, annulé, avec un secret.
    - **Image de marque** : logo KOINO SIGN et couleur `#6d00d7` (pages de
