@@ -88,7 +88,10 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
       const file = await getFileServerSide(envelopeItem.documentData);
 
       // Use the envelope title for version 1, and the envelope item title for version 2.
-      const fileNameToUse = envelope.internalVersion === 1 ? envelope.title : envelopeItem.title + '.pdf';
+      // KOINO SIGN : le titre d'un fichier importé garde son extension (« devis.pdf »,
+      // « contrat.docx ») ; on la retire avant d'ajouter « .pdf » (pas de « .pdf.pdf »)
+      const fileNameToUse =
+        envelope.internalVersion === 1 ? envelope.title : envelopeItem.title.replace(/\.(pdf|docx)$/i, '') + '.pdf';
 
       return {
         filename: fileNameToUse.endsWith('.pdf') ? fileNameToUse : fileNameToUse + '.pdf',

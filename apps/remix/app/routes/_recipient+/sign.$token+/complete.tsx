@@ -1,7 +1,7 @@
 import signingCelebration from '@documenso/assets/images/signing-celebration.png';
 import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session';
 import { useOptionalSession } from '@documenso/lib/client-only/providers/session';
-import { isSignupEnabledForProvider } from '@documenso/lib/constants/auth';
+import { getAllowedSignupDomains, isSignupEnabledForProvider } from '@documenso/lib/constants/auth';
 import { loadRecipientBrandingByTeamId } from '@documenso/lib/server-only/branding/load-recipient-branding';
 import { getDocumentAndSenderByToken } from '@documenso/lib/server-only/document/get-document-by-token';
 import { isRecipientAuthorized } from '@documenso/lib/server-only/document/is-recipient-authorized';
@@ -83,7 +83,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const recipientName =
     recipient.name || fields.find((field) => field.type === FieldType.NAME)?.customText || recipient.email;
 
-  const canSignUp = !isExistingUser && isSignupEnabledForProvider('email');
+  // KOINO SIGN : on ne propose de créer un compte qu'aux adresses qui en ont le droit
+  // (NEXT_PRIVATE_ALLOWED_SIGNUP_DOMAINS) ; un client n'est pas invité à s'inscrire
+  const allowedSignupDomains = getAllowedSignupDomains();
+  const recipientDomain = recipient.email.split('@').pop()?.toLowerCase() ?? '';
+  const canSignUp =
+    !isExistingUser &&
+    isSignupEnabledForProvider('email') &&
+    (allowedSignupDomains.length === 0 || allowedSignupDomains.includes(recipientDomain));
 
   const canRedirectToFolder = user && document.userId === user.id && document.folderId && document.team?.url;
 
